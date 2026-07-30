@@ -1,0 +1,55 @@
+{
+  "name": "browseframe",
+  "version": "1.0.0",
+  "description": "A minimal chromium-based browser for locked-down Linux systems",
+  "homepage": "https://github.com/henk717/uftc",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . ",
+    "build": "electron-builder --linux",
+    "pack": "electron-builder --dir"
+  },
+  "keywords": [
+    "browser",
+    "chromium",
+    "electron",
+    "minimal"
+  ],
+  "author": {
+    "name": "BrowseFrame Developer",
+    "email": "no@email.provided"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.browseframe.browser",
+    "productName": "BrowseFrame",
+    "files": [
+      "**/*"
+    ],
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "category": "Network",
+      "executableName": "browseframe",
+      "desktop": "browseframe.desktop",
+      "icon": "icon.png",
+      "maintainer": "no@email.provided",
+      "mimeTypes": [
+        "x-scheme-handler/http",
+        "x-scheme-handler/https"
+      ],
+      "synopsis": "Minimal locked-down browser",
+      "description": "BrowseFrame is a hardened, minimal browser designed for secure Linux environments."
+    },
+    "deb": {
+      "afterInstall": "build/deb/postinst",
+      "afterRemove": "build/deb/postrm"
+    }
+  }
+}

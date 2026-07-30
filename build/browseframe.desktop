@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=BrowseFrame
+Comment=Minimal locked-down browser
+Exec=browseframe %u
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true

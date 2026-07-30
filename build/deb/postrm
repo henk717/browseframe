@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+
+update-alternatives --remove x-www-browser /usr/bin/browseframe || true
+update-alternatives --remove gnome-www-browser /usr/bin/browseframe || true
+
+rm /usr/bin/browseframe 

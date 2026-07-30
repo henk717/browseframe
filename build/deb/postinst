@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+if [ ! -f /usr/bin/browseframe ]; then
+    ln -sf /opt/BrowseFrame/browseframe /usr/bin/browseframe
+fi
+
+# Register BrowseFrame as a browser alternative
+update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/browseframe 200
+update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/bin/browseframe 200
+
+# Update MIME and desktop databases
+update-desktop-database || true
+update-mime-database /usr/share/mime || true
