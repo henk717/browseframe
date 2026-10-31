@@ -16,7 +16,11 @@ function createWindow(url) {
       webviewTag: false,
       sandbox: true
     },
-    titleBarStyle: 'hidden',
+    // Electron 28 ignored titleBarStyle on Linux; Electron 45 implements it by
+    // setting _MOTIF_WM_HINTS decorations=0 + _GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED,
+    // which makes the window manager drop the frame, title bar and resize
+    // borders. Keep the option for macOS only; Linux gets decorations back.
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hidden' } : {}),
     frame: true,
     menuBarVisible: false
   });
