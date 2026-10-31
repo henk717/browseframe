@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
+const { installSystemCA } = require('./system-ca');
 
 let mainWindow;
 
@@ -44,8 +45,13 @@ function createWindow(url) {
     };
   });
 
-  // Intercept downloads
+  // Verify TLS against the Linux system trust store (/etc/ssl/certs) instead of
+  // the CA snapshot compiled into the bundled Chromium. Must be installed
+  // before the first loadURL() of this session.
   const ses = mainWindow.webContents.session;
+  installSystemCA(ses);
+
+  // Intercept downloads
 
   ses.on('will-download', (event, item) => {
     event.preventDefault(); // Stop the download dialog
