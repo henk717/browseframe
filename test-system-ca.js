@@ -197,11 +197,12 @@ function check(name, got, want) {
 
   check('private CA, Chromium error -> accept', await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'CERT_AUTHORITY_INVALID')), 0);
   check('private CA, Chromium ok -> Chromium verdict kept', await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -3);
-  check('hostname mismatch -> reject', await decide(mod, fakeRequest(goodLeaf, 'evil.example', 'CERT_COMMON_NAME_INVALID')), -2);
-  check('revoked leaf, Chromium ok -> reject (CRL)', await decide(mod, fakeRequest(revokedLeaf, 'revoked.internal', 'OK')), -2);
-  check('revoked leaf, Chromium error -> reject', await decide(mod, fakeRequest(revokedLeaf, 'revoked.internal', 'CERT_REVOKED')), -2);
+  check("Chromium's 'net::OK' spelling is recognised", await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'net::OK')), -3);
+  check('hostname mismatch -> reject', await decide(mod, fakeRequest(goodLeaf, 'evil.example', 'CERT_COMMON_NAME_INVALID')), -202);
+  check('revoked leaf, Chromium ok -> reject (CRL)', await decide(mod, fakeRequest(revokedLeaf, 'revoked.internal', 'OK')), -206);
+  check('revoked leaf, Chromium error -> reject', await decide(mod, fakeRequest(revokedLeaf, 'revoked.internal', 'CERT_REVOKED')), -206);
   check('self-signed leaf (no chain), Chromium ok -> defer', await decide(mod, fakeRequest(orphanLeaf, 'orphan.internal', 'OK', [])), -3);
-  check('self-signed leaf (no chain), Chromium error -> reject', await decide(mod, fakeRequest(orphanLeaf, 'orphan.internal', 'CERT_AUTHORITY_INVALID', [])), -2);
+  check('self-signed leaf (no chain), Chromium error -> reject', await decide(mod, fakeRequest(orphanLeaf, 'orphan.internal', 'CERT_AUTHORITY_INVALID', [])), -202);
   check('root also served in chain, anchor present -> accept', await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK', [intPem, rootPem])), -3);
 
   // ---- 8-10: the eMudhra shape (root removed by the distro) ----------
@@ -210,7 +211,7 @@ function check(name, got, want) {
   buildStore({ withRoot: false });          // ← what `apt upgrade ca-certificates` does
   mod = load({});                            // same code, new store on disk
   check('eMudhra sim step 2: root removed, Chromium still trusts it -> REJECT',
-    await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -2);
+    await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -202);
 
   mod = load({ BROWSEFRAME_UNTRUSTED_FALLBACK: '1' });
   check('eMudhra sim step 2 with UNTRUSTED_FALLBACK=1 -> accept again',
@@ -230,13 +231,13 @@ function check(name, got, want) {
   fs.writeFileSync(BL1, `# compromised intermediate\ncert-sha256:${certHash}\n`);
   mod = load({ BROWSEFRAME_BLOCKLIST: BL1 });
   check('blocklist cert-sha256 hit -> reject even though root is trusted',
-    await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -2);
+    await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -202);
 
   const BL2 = path.join(ROOT, 'blocked-spki.txt');
   fs.writeFileSync(BL2, `spki-sha256:${spkiHash}\n`);
   mod = load({ BROWSEFRAME_BLOCKLIST: BL2 });
   check('blocklist spki-sha256 hit -> reject',
-    await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -2);
+    await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -202);
 
   mod = load({ BROWSEFRAME_BLOCKLIST: path.join(ROOT, 'nonexistent.txt') });
   check('missing blocklist -> no effect', await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -3);
@@ -246,7 +247,7 @@ function check(name, got, want) {
   check('openssl missing, Chromium ok -> defer to Chromium', await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -3);
 
   mod = load({ BROWSEFRAME_OPENSSL: '/nonexistent/openssl', BROWSEFRAME_STRICT_SYSTEM_CA: '1' });
-  check('openssl missing, strict -> reject', await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -2);
+  check('openssl missing, strict -> reject', await decide(mod, fakeRequest(goodLeaf, 'intranet.internal', 'OK')), -202);
 
   // bundle only, no rehashed links (pure ca-certificates.crt layout)
   const BUNDLE_ONLY = path.join(ROOT, 'bundle-only');

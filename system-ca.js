@@ -69,6 +69,11 @@ const CACHE_TTL_MS = 60 * 1000;
 // openssl X509_V_ERR_CERT_REVOKED
 const X509_V_ERR_CERT_REVOKED = 23;
 
+// net::Error codes returned to Chromium for a rejection, so the user gets a
+// certificate error page (and the right reason) instead of a blank failure.
+const REJECT_UNTRUSTED = -202; // net::ERR_CERT_AUTHORITY_INVALID
+const REJECT_REVOKED = -206; // net::ERR_CERT_REVOKED
+
 const BUNDLE_CANDIDATES = [
   process.env.BROWSEFRAME_CA_BUNDLE,
   path.join(CA_DIR, 'ca-certificates.crt'), // Debian / Ubuntu
@@ -381,7 +386,9 @@ function installSystemCA(session) {
 
   session.setCertificateVerifyProc((request, callback) => {
     const { hostname, certificate, verificationResult } = request;
-    const chromiumOk = verificationResult === 'OK';
+    // Electron reports this as 'OK' in some versions and 'net::OK' in others
+    // (Electron 28 on Linux says 'net::OK'), so normalise before comparing.
+    const chromiumOk = String(verificationResult || '').replace(/^net::/, '') === 'OK';
 
     // Trust store identity is part of the key, so an apt upgrade of
     // ca-certificates invalidates cached verdicts immediately.
@@ -409,7 +416,7 @@ function installSystemCA(session) {
       const blocked = await blocklistHit(all);
       if (blocked) {
         log(`REJECT ${hostname}: blocklisted (${blocked})`);
-        return -2;
+        return REJECT_UNTRUSTED;
       }
 
       const { judged, ok, revoked, detail } = await verifyWithSystemStore({
@@ -420,7 +427,7 @@ function installSystemCA(session) {
 
       if (revoked) {
         log(`REJECT ${hostname}: certificate revoked (${detail})`);
-        return -2;
+        return REJECT_REVOKED;
       }
       if (ok) {
         // Store trusts it and the hostname matches. If Chromium agreed, keep
@@ -437,17 +444,17 @@ function installSystemCA(session) {
           return -3;
         }
         log(`REJECT ${hostname}: not trusted by system store (${detail})`);
-        return -2;
+        return REJECT_UNTRUSTED;
       }
       // Could not judge (no store, no openssl, timeout): defer to Chromium
       // unless strict mode forces a rejection.
       log(`DEFER ${hostname}: system store unusable (${detail})`);
-      return chromiumOk && !STRICT ? -3 : -2;
+      return chromiumOk && !STRICT ? -3 : REJECT_UNTRUSTED;
     })()
       .then(decide)
       .catch(err => {
         log(`error for ${hostname}: ${err && err.message}`);
-        decide(chromiumOk && !STRICT ? -3 : -2);
+        decide(chromiumOk && !STRICT ? -3 : REJECT_UNTRUSTED);
       });
   });
 }

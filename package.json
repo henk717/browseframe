@@ -21,14 +21,18 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0"
   },
   "build": {
     "appId": "com.browseframe.browser",
     "productName": "BrowseFrame",
     "files": [
-      "**/*"
+      "main.js",
+      "system-ca.js",
+      "preload.js",
+      "blank.html",
+      "package.json"
     ],
     "linux": {
       "target": [
@@ -37,7 +41,6 @@
       ],
       "category": "Network",
       "executableName": "browseframe",
-      "desktop": "browseframe.desktop",
       "icon": "icon.png",
       "maintainer": "no@email.provided",
       "mimeTypes": [
@@ -45,11 +48,36 @@
         "x-scheme-handler/https"
       ],
       "synopsis": "Minimal locked-down browser",
-      "description": "BrowseFrame is a hardened, minimal browser designed for secure Linux environments."
+      "description": "BrowseFrame is a hardened, minimal browser designed for secure Linux environments.",
+      "desktop": {
+        "entry": {
+          "Name": "BrowseFrame",
+          "Comment": "Minimal locked-down browser",
+          "Categories": "Network;WebBrowser;",
+          "MimeType": "x-scheme-handler/http;x-scheme-handler/https;",
+          "StartupNotify": "true",
+          "Terminal": "false",
+          "Type": "Application"
+        }
+      },
+      "syncDesktopName": true
     },
     "deb": {
       "afterInstall": "build/deb/postinst",
-      "afterRemove": "build/deb/postrm"
+      "afterRemove": "build/deb/postrm",
+      "depends": [
+        "openssl",
+        "libgtk-3-0t64 | libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0t64 | libatspi2.0-0",
+        "libuuid1",
+        "libsecret-1-0"
+      ]
     }
-  }
+  },
+  "desktopName": "browseframe.desktop"
 }
