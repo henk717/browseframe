@@ -1,6 +1,6 @@
 {
   "name": "browseframe",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A minimal chromium-based browser for locked-down Linux systems",
   "homepage": "https://github.com/henk717/uftc",
   "main": "main.js",
